@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -24,12 +25,12 @@ export default function Home() {
         </p>
 
         <div className="flex items-center gap-4">
-          <button className="px-8 py-4 rounded-xl font-bold text-white bg-gradient-to-tr from-purple-600 to-blue-600 shadow-[0_0_40px_-10px_rgba(147,51,234,0.5)] hover:shadow-[0_0_60px_-10px_rgba(147,51,234,0.6)] hover:scale-105 active:scale-95 transition-all">
+          <Link href="/create" className="px-8 py-4 rounded-xl font-bold text-white bg-gradient-to-tr from-purple-600 to-blue-600 shadow-[0_0_40px_-10px_rgba(147,51,234,0.5)] hover:shadow-[0_0_60px_-10px_rgba(147,51,234,0.6)] hover:scale-105 active:scale-95 transition-all">
             Start Developing Free
-          </button>
-          <button className="px-8 py-4 rounded-xl font-semibold text-slate-300 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            Explore Documentation
-          </button>
+          </Link>
+          <Link href="/explore" className="px-8 py-4 rounded-xl font-semibold text-slate-300 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+            Explore Published Games
+          </Link>
         </div>
       </section>
 
