@@ -1,5 +1,6 @@
-export default async function GamePlayerPage({ params }: { params: { id: string } }) {
-  // In a real application, you would fetch game details from the database using params.id
+export default async function GamePlayerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // In a real application, you would fetch game details from the database using id
   // This is a mockup of the Game Player page
 
   return (

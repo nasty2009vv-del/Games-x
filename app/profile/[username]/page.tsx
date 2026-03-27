@@ -1,9 +1,10 @@
 import Link from "next/link";
 
-export default function UserProfile({ params }: { params: { username: string } }) {
+export default async function UserProfile({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
   // Mock data for the user profile
   const user = {
-    username: params.username,
+    username: username,
     role: "Dev",
     bio: "Indie Game Developer passionate about Cyberpunk and Pixel Art. Welcome to my studio!",
     joinDate: "March 2023",
