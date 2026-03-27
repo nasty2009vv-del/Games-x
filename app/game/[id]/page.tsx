@@ -1,100 +1,122 @@
+import { prisma } from "../../../lib/prisma";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
 export default async function GamePlayerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // In a real application, you would fetch game details from the database using id
-  // This is a mockup of the Game Player page
+  
+  // Try to find the game in the database
+  const game = await prisma.game.findUnique({
+    where: { id: id },
+    include: { user: true }
+  });
+
+  // Handle game not found
+  if (!game) {
+    // If it's a mock ID from our list, show a placeholder
+    const mockGames: Record<string, any> = {
+      "starship-core": { title: "Starship Core", description: "Epic spaceship battles.", user: { username: "PixelNinja" } },
+      "neon-dash": { title: "Neon Dash", description: "Fast-paced cyberpunk runner.", user: { username: "AbdallahDev" } }
+    };
+
+    if (mockGames[id]) {
+      return (
+        <div className="w-full max-w-6xl mx-auto px-4 py-32 text-center">
+          <h1 className="text-4xl font-black text-white mb-4 italic">{mockGames[id].title}</h1>
+          <p className="text-slate-500 mb-8">This mock game is being migrated to the new database.</p>
+          <Link href="/explore" className="text-purple-500 underline font-bold">Back to Explore</Link>
+        </div>
+      );
+    }
+    return notFound();
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
       {/* Game Header */}
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h1 className="text-4xl font-black text-white capitalize mb-1">
-            Neon Dash : The Sandbox Demo
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8 text-right md:text-left">
+        <div className="flex-1 w-full" dir="rtl">
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-2 italic">
+            {game.title}
           </h1>
-          <div className="flex gap-4 items-center">
-            <span className="text-slate-400 font-medium">By @AbdallahDev</span>
-            <span className="text-sm bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">HTML5</span>
-            <span className="text-yellow-400 text-sm font-semibold flex items-center gap-1">
-              ⭐ 4.9 <span className="text-slate-500 font-normal">(1.2k ratings)</span>
+          <div className="flex gap-4 items-center justify-start flex-wrap">
+            <Link href={`/profile/${game.user?.username}`} className="text-purple-400 hover:text-purple-300 font-bold transition-colors">
+              @{game.user?.username || "Creator"}
+            </Link>
+            <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">HTML5 ENGINE</span>
+            <span className="text-yellow-400 text-sm font-black flex items-center gap-1">
+              ⭐ {game.rating_avg.toFixed(1)} <span className="text-slate-500 font-normal">({game.plays_count} plays)</span>
             </span>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-slate-900 border border-slate-700 hover:border-purple-500 rounded-xl text-slate-300 hover:text-white transition-all text-sm font-medium">
-            🔖 Save List
+        <div className="flex gap-3 w-full md:w-auto">
+          <button className="flex-1 md:flex-none px-6 py-3 bg-slate-900 border border-slate-700 hover:border-purple-500 rounded-2xl text-slate-300 transition-all text-sm font-bold">
+            🔖 Save
           </button>
-          <button className="px-4 py-2 bg-gradient-to-tr from-rose-500 to-pink-500 shadow-lg shadow-pink-500/20 rounded-xl text-white transition-transform active:scale-95 font-bold text-sm">
-            💖 Support Creator
+          <button className="flex-1 md:flex-none px-8 py-3 bg-gradient-to-tr from-purple-600 to-blue-600 shadow-xl shadow-purple-600/20 rounded-2xl text-white active:scale-95 font-black text-sm">
+            💖 Support
           </button>
         </div>
       </div>
 
-      {/* The Actual Sandbox Iframe wrapper - The core of the tech recommendation */}
-      <div className="w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] border border-slate-800 relative group">
-        <div className="absolute inset-0 z-10 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900/10 transition-all duration-500">
-           <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] animate-pulse">
-             <span className="text-5xl ml-2">▶</span>
+      {/* Actual Game Sandbox Wrapper */}
+      <div className="w-full aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-800 relative group">
+        <div className="absolute inset-0 z-10 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-950/20 transition-all duration-700">
+           <div className="w-24 h-24 bg-white/5 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20 shadow-2xl group-hover:scale-110 transition-transform">
+             <span className="text-5xl ml-2 text-white drop-shadow-lg">▶</span>
            </div>
-           <p className="mt-6 text-white text-lg font-bold tracking-widest drop-shadow-md uppercase">Click to Initialize Engine</p>
+           <p className="mt-8 text-white text-lg font-black tracking-widest drop-shadow-2xl uppercase">Initialize Game Forge Sandbox</p>
         </div>
 
-        {/* Dummy Iframe for presentation */}
         <iframe 
           sandbox="allow-scripts allow-downloads" 
-          title="Game Sandbox"
+          title="Game Player"
           src="about:blank"
-          className="w-full h-full border-0 pointer-events-none"
+          className="w-full h-full border-0 opacity-0 group-active:opacity-100 transition-opacity"
         />
 
-        {/* Sandbox UI Overlay badge */}
-        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs font-mono text-emerald-400 border border-emerald-900 shadow-md">
-          🛡️ Secure Context WebWorker
+        <div className="absolute bottom-6 right-6 bg-black/60 backdrop-blur-lg px-4 py-1.5 rounded-full text-[10px] font-black font-mono text-emerald-400 border border-emerald-900/50 shadow-2xl tracking-[0.2em]">
+          🛡️ SECURE ENVIRONMENT
         </div>
       </div>
 
       {/* Under Player Details Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-        <div className="md:col-span-2 space-y-8">
-           <section className="bg-slate-900/30 p-8 rounded-3xl border border-slate-800">
-              <h2 className="text-2xl font-bold text-white mb-4">About the Game</h2>
-              <div className="text-slate-300 font-light leading-relaxed prose prose-invert max-w-none">
-                <p>Welcome to Neon Dash! A fast-paced cyberpunk platformer built entirely with HTML5 and PixiJS. You are a rogue AI escaping a mega-corporation database.</p>
-                <p>Controls:</p>
-                <ul className="list-disc pl-5 mt-2 text-slate-400">
-                  <li><strong>Arrow Keys / WASD</strong> - Move</li>
-                  <li><strong>Space</strong> - Jump</li>
-                  <li><strong>Shift</strong> - Dash</li>
-                </ul>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-16">
+        <div className="lg:col-span-2 space-y-12">
+           <section className="bg-slate-900/30 p-8 md:p-12 rounded-[2.5rem] border border-slate-800/50 shadow-inner">
+              <h2 className="text-2xl font-black text-white mb-6 border-b border-slate-800 pb-4 inline-block">About the Game</h2>
+              <div className="text-slate-300 font-light leading-relaxed prose prose-invert max-w-none text-right" dir="rtl">
+                {game.description || "No description provided for this game."}
               </div>
            </section>
         </div>
         
         {/* Sidebar Info */}
-        <div className="space-y-6">
-           <section className="bg-slate-900/30 p-6 rounded-3xl border border-slate-800">
-              <h3 className="uppercase text-xs font-bold text-slate-500 tracking-wider mb-4">Game Stats</h3>
-              <div className="space-y-3">
-                 <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                   <span className="text-slate-400">Total Plays</span>
-                   <span className="text-white font-mono font-medium">145,290</span>
+        <div className="space-y-8">
+           <section className="bg-slate-900/30 p-8 rounded-[2.5rem] border border-slate-800/50">
+              <h3 className="uppercase text-xs font-black text-slate-500 tracking-widest mb-6">Live Statistics</h3>
+              <div className="space-y-4">
+                 <div className="flex justify-between items-center py-3 border-b border-white/5">
+                   <span className="text-slate-400 text-sm">Plays</span>
+                   <span className="text-white font-mono font-bold">{game.plays_count.toLocaleString()}</span>
                  </div>
-                 <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                   <span className="text-slate-400">Published Date</span>
-                   <span className="text-white font-mono font-medium">Oct 14, 2023</span>
+                 <div className="flex justify-between items-center py-3 border-b border-white/5">
+                   <span className="text-slate-400 text-sm">Status</span>
+                   <span className="text-emerald-400 font-bold uppercase text-xs">{game.status}</span>
                  </div>
-                 <div className="flex justify-between items-center py-2">
-                   <span className="text-slate-400">Engine</span>
-                   <span className="text-purple-400 font-medium">PixiJS v7 + Custom Lua</span>
+                 <div className="flex justify-between items-center py-3">
+                   <span className="text-slate-400 text-sm">Engine</span>
+                   <span className="text-purple-400 font-bold">GF Core v1.0</span>
                  </div>
               </div>
            </section>
 
-           <section className="bg-slate-800/30 p-6 rounded-3xl border border-slate-700/50">
-              <h3 className="uppercase text-xs font-bold text-slate-400 tracking-wider mb-4 border-b border-slate-700 pb-2">Tags</h3>
+           <section className="bg-slate-950 p-8 rounded-[2.5rem] border border-slate-900">
+              <h3 className="uppercase text-xs font-black text-slate-500 tracking-widest mb-6">Metadata</h3>
               <div className="flex flex-wrap gap-2">
-                 {['Platformer', 'Cyberpunk', 'Pixel Art', 'Action', 'Indie'].map(t => (
-                   <span key={t} className="bg-slate-950 px-3 py-1 rounded-full text-xs text-slate-300 font-medium hover:text-white cursor-pointer transition-colors border border-slate-800 hover:border-purple-600">
-                     #{t}
+                 {(game.tags || "Game, Indie, Development").split(',').map(t => (
+                   <span key={t} className="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-400 font-bold hover:text-white cursor-pointer transition-colors border border-slate-800 hover:border-purple-600">
+                     #{t.trim()}
                    </span>
                  ))}
               </div>
