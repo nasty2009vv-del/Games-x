@@ -138,7 +138,7 @@ requestAnimationFrame(gameLoop);
               <div 
                 key={node.id}
                 onClick={() => setSelectedNode(node.id)}
-                className={\`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors \${selectedNode === node.id ? 'bg-[#094771] text-white border border-blue-500/30 shadow-inner' : 'hover:bg-[#2a2d2e]'} \${node.id !== "Main Scene" ? 'pr-6' : ''}\`}
+                className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedNode === node.id ? 'bg-[#094771] text-white border border-blue-500/30 shadow-inner' : 'hover:bg-[#2a2d2e]'} ${node.id !== "Main Scene" ? 'pr-6' : ''}`}
               >
                 <span className={node.color}>{node.icon}</span> 
                 <span className="font-medium">{node.id}</span>
@@ -180,13 +180,13 @@ requestAnimationFrame(gameLoop);
            {/* Bottom Half: Interactive Panels */}
            <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e]">
               <div className="flex border-b border-[#3e3e42] bg-[#2d2d2d] px-2 pt-2 gap-1 text-sm shrink-0">
-                 <button onClick={() => setActiveTab('code')} className={\`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors \${activeTab === 'code' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}\`}>
+                 <button onClick={() => setActiveTab('code')} className={`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors ${activeTab === 'code' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}`}>
                    <span>📝</span> كود <span className="text-[10px] bg-slate-700 px-1.5 rounded ml-1 text-slate-300">main_level.js</span>
                  </button>
-                 <button onClick={() => setActiveTab('assets')} className={\`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors \${activeTab === 'assets' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}\`}>
+                 <button onClick={() => setActiveTab('assets')} className={`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors ${activeTab === 'assets' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}`}>
                    <span>📦</span> أصول
                  </button>
-                 <button onClick={() => setActiveTab('settings')} className={\`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors \${activeTab === 'settings' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}\`}>
+                 <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 flex items-center gap-2 font-medium transition-colors ${activeTab === 'settings' ? 'bg-[#1e1e1e] text-white border-t-[3px] border-purple-500 rounded-t-md' : 'text-slate-400 hover:text-white hover:bg-[#333]'}`}>
                    <span>⚙️</span> إعدادات
                  </button>
                  <div className="w-px h-6 bg-[#444] my-auto mx-2 text-transparent">|</div>
