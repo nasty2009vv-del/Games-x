@@ -41,7 +41,7 @@ export default function RootLayout({
             <Link href="/assets" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Asset Store</Link>
             <Link href="/profile/demo-user" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profile</Link>
             <div className="h-4 w-px bg-slate-800"></div>
-            <Link href="/api/auth/signin" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+            <Link href="/auth/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link href="/editor" className="px-4 py-2 rounded-full border border-purple-500/50 text-purple-400 text-sm font-medium hover:bg-purple-500/10 transition-all font-mono">
               [Open Editor]
             </Link>
