@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { saveGame } from "../../lib/actions";
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -12,6 +13,8 @@ export default function GameForgeEditor() {
   const [isRunning, setIsRunning] = useState(false);
   const [runHash, setRunHash] = useState(0);
   const [selectedNode, setSelectedNode] = useState("Player");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   
   const [code, setCode] = useState(`// GameForge Canvas API v1.0
 // Write your game logic here!
@@ -70,6 +73,19 @@ requestAnimationFrame(gameLoop);
     setIsRunning(true);
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveStatus("saving");
+    const result = await saveGame("demo", { code, title: "my_platformer" });
+    if (result.success) {
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } else {
+      setSaveStatus("error");
+    }
+    setIsSaving(false);
+  };
+
   const sceneNodes = [
     { id: "Main Scene", icon: "🌍", color: "text-white" },
     { id: "Player", icon: "👤", color: "text-purple-400" },
@@ -111,8 +127,12 @@ requestAnimationFrame(gameLoop);
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="px-4 py-1.5 rounded bg-transparent border border-slate-600 hover:bg-slate-700 text-white text-sm transition-colors active:scale-95">
-            حفظ
+          <button 
+            disabled={isSaving}
+            onClick={handleSave}
+            className={`px-4 py-1.5 rounded bg-transparent border border-slate-600 hover:bg-slate-700 text-white text-sm transition-colors active:scale-95 disabled:opacity-50 flex items-center gap-2`}
+          >
+            {saveStatus === "saving" ? "جارِ الحفظ..." : saveStatus === "success" ? "تم الحفظ ✓" : "حفظ"}
           </button>
           <button onClick={handleRunGame} className="px-6 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20 active:scale-95">
             <span>تشغيل المعاينة</span>
