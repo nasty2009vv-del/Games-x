@@ -33,17 +33,43 @@ export async function saveGame(gameId: string, data: { title?: string, code?: st
   }
 }
 
-export async function createGame(data: { title: string, description: string, status: string, userId?: string }) {
+export async function createGame(data: { title: string, description: string, status: string, userId?: string, packageName?: string, fileContent?: string }) {
   try {
+    // 🛡️ Ensure a user exists for the foreign key
+    let user = await prisma.user.findFirst();
+    
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          username: "demo-user",
+          email: "demo@gameforge.com",
+          password_hash: "mock",
+          bio: "Default Creator",
+        }
+      });
+    }
+
     const game = await prisma.game.create({
       data: {
         title: data.title,
         description: data.description,
         status: data.status,
-        userId: data.userId || "demo-user-id", // Fallback for mockup
-        thumbnail: "bg-purple-600/20", // Default thumb
+        userId: user.id,
+        thumbnail: data.packageName || "bg-purple-600/20", // Store package name here
       }
     });
+
+    // ✨ Save the code content into a Project record linked to the game
+    if (data.fileContent) {
+      await prisma.project.create({
+        data: {
+          gameId: game.id,
+          userId: user.id,
+          files_json: JSON.stringify({ "index.html": data.fileContent }),
+          scene_json: "{}"
+        }
+      });
+    }
 
     revalidatePath("/explore");
     return { success: true, game };
