@@ -35,10 +35,10 @@ export default function RootLayout({
               GameForge
             </span>
           </Link>
-          <div className="flex gap-4 items-center gap-6">
-            <Link href="/explore" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Explore Games</Link>
-            <Link href="/profile/demo-user" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">My Profile</Link>
-            <span className="text-sm font-medium text-slate-600 cursor-not-allowed">Asset Store (Soon)</span>
+          <div className="flex gap-4 items-center gap-8">
+            <Link href="/explore" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Explore</Link>
+            <Link href="/jams" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Game Jams</Link>
+            <Link href="/profile/demo-user" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profile</Link>
             <div className="h-4 w-px bg-slate-800"></div>
             <Link href="/api/auth/signin" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link href="/editor" className="px-4 py-2 rounded-full border border-purple-500/50 text-purple-400 text-sm font-medium hover:bg-purple-500/10 transition-all font-mono">
