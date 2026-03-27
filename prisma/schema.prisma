@@ -33,7 +33,7 @@ model Game {
   status         String    @default("draft") // draft, published, archived
   plays_count    Int       @default(0)
   rating_avg     Float     @default(0.0)
-  tags           String[]
+  tags           String    @default("")
   createdAt      DateTime  @default(now())
 
   userId         String
