@@ -1,0 +1,112 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  username      String    @unique
+  email         String    @unique
+  password_hash String
+  avatar        String?
+  bio           String?
+  role          String    @default("player") // player, dev, admin
+  createdAt     DateTime  @default(now())
+
+  games         Game[]
+  projects      Project[]
+  assets        Asset[]
+  ratings       Rating[]
+  jamEntries    JamEntry[]
+}
+
+model Game {
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  thumbnail      String?
+  engine_version String?
+  status         String    @default("draft") // draft, published, archived
+  plays_count    Int       @default(0)
+  rating_avg     Float     @default(0.0)
+  tags           String[]
+  createdAt      DateTime  @default(now())
+
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+
+  projects       Project[]
+  ratings        Rating[]
+  jamEntries     JamEntry[]
+}
+
+model Project {
+  id         String    @id @default(uuid())
+  files_json String    @default("{}")
+  scene_json String    @default("{}")
+  last_saved DateTime  @default(now())
+
+  gameId     String
+  game       Game      @relation(fields: [gameId], references: [id])
+  
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model Asset {
+  id         String    @id @default(uuid())
+  name       String
+  type       String    // sprite, audio, font
+  file_url   String
+  size_bytes Int
+  is_public  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model Rating {
+  id          String   @id @default(uuid())
+  score       Int      // 1 to 5
+  review_text String?
+  createdAt   DateTime @default(now())
+
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id])
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Jam {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  start_date  DateTime
+  end_date    DateTime
+  prize       String?
+  rules_json  String   @default("{}")
+
+  entries     JamEntry[]
+}
+
+model JamEntry {
+  id          String   @id @default(uuid())
+  submittedAt DateTime @default(now())
+
+  jamId       String
+  jam         Jam      @relation(fields: [jamId], references: [id])
+
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id])
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@unique([jamId, gameId])
+}
