@@ -38,6 +38,7 @@ export default function RootLayout({
           <div className="flex gap-4 items-center gap-8">
             <Link href="/explore" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Explore</Link>
             <Link href="/jams" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Game Jams</Link>
+            <Link href="/assets" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Asset Store</Link>
             <Link href="/profile/demo-user" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profile</Link>
             <div className="h-4 w-px bg-slate-800"></div>
             <Link href="/api/auth/signin" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
