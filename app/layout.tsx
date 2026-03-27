@@ -18,15 +18,20 @@ export const metadata: Metadata = {
   description: "أنشئ، طوّر، وانشر ألعابك مباشرةً من المتصفح باستخدام محرك GameForge.",
 };
 
-export default function RootLayout({
+import { cookies } from "next/headers";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialLang = (cookieStore.get("gf-lang")?.value || "ar") as any;
+
   return (
-    <html lang="ar" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
-      <body>
-        <ClientLayout>{children}</ClientLayout>
+    <html lang={initialLang} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`} dir={initialLang === 'ar' ? 'rtl' : 'ltr'}>
+      <body className="h-full overflow-x-hidden">
+        <ClientLayout initialLang={initialLang}>{children}</ClientLayout>
       </body>
     </html>
   );

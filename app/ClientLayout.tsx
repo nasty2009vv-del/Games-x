@@ -56,17 +56,17 @@ function BodyWrapper({ children }: { children: React.ReactNode }) {
   const { dir } = useLang();
 
   return (
-    <div className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-purple-500/30" dir={dir}>
+    <div className={`min-h-screen flex flex-col bg-[#050608] text-slate-100 font-sans selection:bg-purple-500/30 transition-all duration-500`} dir={dir}>
       <NavBar />
-      <main className="flex-1 flex flex-col">{children}</main>
+      <main className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-700">{children}</main>
       <FooterBar />
     </div>
   );
 }
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({ children, initialLang }: { children: React.ReactNode, initialLang?: any }) {
   return (
-    <LangProvider>
+    <LangProvider initialLang={initialLang}>
       <BodyWrapper>{children}</BodyWrapper>
     </LangProvider>
   );

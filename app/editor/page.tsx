@@ -4,35 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { saveGame } from "../../lib/actions";
+import { BUILTIN_ASSETS, ASSET_CATEGORIES, type GFAsset } from "../../lib/assets";
+import { useLang } from "../../lib/lang";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-const BUILTIN_ASSETS = [
-  { id: "a1", name: "Player Idle", cat: "sprite", icon: "🧍", code: `// Player Sprite Component\nconst playerSprite = { x:400, y:300, w:32, h:32, frame:0, color:'#a855f7' };\n\nfunction drawPlayer(ctx) {\n  ctx.fillStyle = playerSprite.color;\n  ctx.fillRect(playerSprite.x, playerSprite.y, playerSprite.w, playerSprite.h);\n  // Eyes\n  ctx.fillStyle = '#fff'; ctx.fillRect(playerSprite.x+8, playerSprite.y+8, 6, 6);\n  ctx.fillRect(playerSprite.x+18, playerSprite.y+8, 6, 6);\n}` },
-  { id: "a2", name: "Enemy Patrol", cat: "sprite", code: `// Enemy Patrol AI\nconst enemy = { x:200, y:200, speed:80, dir:1, color:'#ef4444' };\n\nfunction updateEnemy(dt) {\n  enemy.x += enemy.speed * enemy.dir * dt;\n  if(enemy.x > 700 || enemy.x < 100) enemy.dir *= -1;\n}\nfunction drawEnemy(ctx) {\n  ctx.fillStyle = enemy.color;\n  ctx.beginPath(); ctx.arc(enemy.x, enemy.y, 16, 0, Math.PI*2); ctx.fill();\n}`, icon: "👾" },
-  { id: "a3", name: "Coin Collectible", cat: "sprite", code: `// Coin Collectible\nconst coins = [];\nfor(let i=0;i<5;i++) coins.push({x:Math.random()*750+25,y:Math.random()*550+25,collected:false,pulse:Math.random()*6});\n\nfunction updateCoins(dt, px, py) {\n  coins.forEach(c => {\n    if(c.collected) return;\n    c.pulse += dt*4;\n    if(Math.hypot(px-c.x, py-c.y) < 25) { c.collected=true; console.log("⭐ Coin!"); }\n  });\n}\nfunction drawCoins(ctx) {\n  coins.filter(c=>!c.collected).forEach(c => {\n    const r = 8 + Math.sin(c.pulse)*2;\n    ctx.fillStyle='#facc15'; ctx.beginPath(); ctx.arc(c.x,c.y,r,0,Math.PI*2); ctx.fill();\n  });\n}`, icon: "🪙" },
-  { id: "a4", name: "Tilemap Grid", cat: "tileset", code: `// Tilemap Grid Background\nfunction drawTilemap(ctx, w, h) {\n  const tileSize = 40;\n  for(let x=0; x<w; x+=tileSize) {\n    for(let y=0; y<h; y+=tileSize) {\n      const shade = ((x/tileSize + y/tileSize) % 2 === 0) ? '#0f172a' : '#111827';\n      ctx.fillStyle = shade;\n      ctx.fillRect(x, y, tileSize, tileSize);\n    }\n  }\n}`, icon: "🗺️" },
-  { id: "a5", name: "Particle Explosion", cat: "effect", code: `// Particle Explosion System\nconst particles = [];\n\nfunction spawnExplosion(x, y, color='#f97316') {\n  for(let i=0;i<20;i++) {\n    const angle = Math.random()*Math.PI*2;\n    const speed = Math.random()*200+50;\n    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1,color});\n  }\n}\nfunction updateParticles(dt) {\n  particles.forEach(p => { p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt*2; });\n  while(particles.length && particles[0].life<=0) particles.shift();\n}\nfunction drawParticles(ctx) {\n  particles.forEach(p => {\n    ctx.globalAlpha=p.life; ctx.fillStyle=p.color;\n    ctx.beginPath(); ctx.arc(p.x,p.y,3*p.life,0,Math.PI*2); ctx.fill();\n  });\n  ctx.globalAlpha=1;\n}`, icon: "💥" },
-  { id: "a6", name: "Trail Effect", cat: "effect", code: `// Trail Renderer\nconst trail = [];\n\nfunction addTrail(x, y, color='#a855f7') {\n  trail.push({x, y, life:1, color});\n  if(trail.length > 30) trail.shift();\n}\nfunction updateTrail(dt) {\n  trail.forEach(t => t.life -= dt * 3);\n  while(trail.length && trail[0].life <= 0) trail.shift();\n}\nfunction drawTrail(ctx) {\n  trail.forEach(t => {\n    ctx.globalAlpha = t.life * 0.5;\n    ctx.fillStyle = t.color;\n    ctx.beginPath(); ctx.arc(t.x, t.y, 8*t.life, 0, Math.PI*2); ctx.fill();\n  });\n  ctx.globalAlpha = 1;\n}`, icon: "✨" },
-  { id: "a7", name: "Health Bar UI", cat: "ui", code: `// Health Bar HUD\nfunction drawHealthBar(ctx, x, y, current, max, width=200) {\n  const pct = current / max;\n  const color = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#eab308' : '#ef4444';\n  // Background\n  ctx.fillStyle = '#1e293b'; ctx.fillRect(x, y, width, 16);\n  // Fill\n  ctx.fillStyle = color; ctx.fillRect(x+2, y+2, (width-4)*pct, 12);\n  // Border\n  ctx.strokeStyle = '#475569'; ctx.lineWidth = 1; ctx.strokeRect(x, y, width, 16);\n  // Text\n  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';\n  ctx.fillText(current + ' / ' + max, x + width/2 - 20, y + 12);\n}`, icon: "❤️" },
-  { id: "a8", name: "Score Counter", cat: "ui", code: `// Score Counter HUD\nlet score = 0;\nfunction addScore(points) { score += points; console.log("Score: " + score); }\nfunction drawScore(ctx, x=20, y=36) {\n  ctx.fillStyle = '#a855f7'; ctx.font = 'bold 22px sans-serif';\n  ctx.fillText('SCORE: ' + score, x, y);\n}`, icon: "🏆" },
-  { id: "a9", name: "Platform Physics", cat: "physics", code: `// Simple Platform Physics\nconst gravity = 600;\nconst jumpForce = -350;\nlet onGround = false;\n\nfunction applyGravity(entity, dt, groundY=550) {\n  entity.vy = (entity.vy || 0) + gravity * dt;\n  entity.y += entity.vy * dt;\n  if(entity.y >= groundY) {\n    entity.y = groundY; entity.vy = 0; onGround = true;\n  } else { onGround = false; }\n}\nfunction jump(entity) {\n  if(onGround) { entity.vy = jumpForce; onGround = false; console.log("Jump!"); }\n}`, icon: "⬆️" },
-  { id: "a10", name: "Collision AABB", cat: "physics", code: `// AABB Collision Detection\nfunction checkCollision(a, b) {\n  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;\n}\n\nfunction resolveCollision(a, b) {\n  if(!checkCollision(a, b)) return false;\n  const overlapX = Math.min(a.x+a.w - b.x, b.x+b.w - a.x);\n  const overlapY = Math.min(a.y+a.h - b.y, b.y+b.h - a.y);\n  if(overlapX < overlapY) { a.x += (a.x < b.x) ? -overlapX : overlapX; }\n  else { a.y += (a.y < b.y) ? -overlapY : overlapY; }\n  return true;\n}`, icon: "📦" },
-  { id: "a11", name: "Ambient Beat", cat: "audio", code: `// Audio Context Beat Generator\nlet audioCtx = null;\nfunction playBeat(freq=440, dur=0.1) {\n  if(!audioCtx) audioCtx = new AudioContext();\n  const osc = audioCtx.createOscillator();\n  const gain = audioCtx.createGain();\n  osc.connect(gain); gain.connect(audioCtx.destination);\n  osc.frequency.value = freq;\n  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);\n  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);\n  osc.start(); osc.stop(audioCtx.currentTime + dur);\n}\nfunction playCoinSound() { playBeat(880, 0.08); setTimeout(()=>playBeat(1100,0.08), 80); }`, icon: "🔊" },
-  { id: "a12", name: "Star Parallax BG", cat: "effect", code: `// Starfield Parallax Background\nconst stars = [];\nfor(let i=0;i<60;i++) stars.push({x:Math.random()*800,y:Math.random()*600,s:Math.random()*2+0.5,speed:Math.random()*30+10});\n\nfunction updateStars(dt) {\n  stars.forEach(s => { s.y += s.speed * dt; if(s.y > 600) { s.y = 0; s.x = Math.random()*800; } });\n}\nfunction drawStars(ctx) {\n  stars.forEach(s => {\n    ctx.fillStyle = 'rgba(255,255,255,' + (s.s/3) + ')';\n    ctx.fillRect(s.x, s.y, s.s, s.s);\n  });\n}`, icon: "🌌" },
-];
-
-const ASSET_CATEGORIES = [
-  { key: "all", label: "All", icon: "📦" },
-  { key: "sprite", label: "Sprites", icon: "🧍" },
-  { key: "tileset", label: "Tilesets", icon: "🗺️" },
-  { key: "effect", label: "Effects", icon: "✨" },
-  { key: "ui", label: "UI", icon: "❤️" },
-  { key: "physics", label: "Physics", icon: "⬆️" },
-  { key: "audio", label: "Audio", icon: "🔊" },
-];
-
 export default function GameForgeEditor() {
+  const { lang, dir } = useLang();
   const [isRunning, setIsRunning] = useState(false);
   const [runHash, setRunHash] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,9 +20,12 @@ export default function GameForgeEditor() {
   const [fps, setFps] = useState(0);
   const [editorReady, setEditorReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showAssetPanel, setShowAssetPanel] = useState(false);
+  const [showAssetPanel, setShowAssetPanel] = useState(true);
+  const [rightTab, setRightTab] = useState<"assets"|"inspector">("assets");
   const [assetFilter, setAssetFilter] = useState("all");
-  const [bottomTab, setBottomTab] = useState<"code"|"console">("code");
+  const [assetSearch, setAssetSearch] = useState("");
+  const [expandedAsset, setExpandedAsset] = useState<string|null>(null);
+  const [insertedAssets, setInsertedAssets] = useState<Set<string>>(new Set());
   const logsEndRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -146,10 +127,18 @@ GF.draw = () => {
     setCode(files[name]||"");
   };
 
-  const insertAsset=(asset:typeof BUILTIN_ASSETS[0])=>{
-    const separator = `\n\n// ─── Asset: ${asset.name} ───\n`;
-    setCode(prev => prev + separator + asset.code + "\n");
-    setLogs(p=>[...p,{id:Date.now(),text:`✅ Inserted asset: ${asset.name}`,type:"info"}]);
+  const insertAsset = (asset: GFAsset) => {
+    if (asset.cat === "template") {
+      // Templates replace the whole file
+      setCode(asset.code);
+      setLogs(p => [...p, { id: Date.now(), text: `📋 Template applied: ${asset.name}`, type: "info" }]);
+    } else {
+      // Components append
+      const separator = `\n\n// ─── ${asset.name} (${asset.cat.toUpperCase()}) ───\n`;
+      setCode(prev => prev + separator + asset.code + "\n");
+      setLogs(p => [...p, { id: Date.now(), text: `✅ Added asset: ${asset.name}`, type: "info" }]);
+    }
+    setInsertedAssets(prev => new Set(prev).add(asset.id));
   };
 
   const toggleFullscreen = ()=>{
@@ -167,7 +156,13 @@ GF.draw = () => {
     return ()=>document.removeEventListener("fullscreenchange",h);
   },[]);
 
-  const filteredAssets = assetFilter==="all" ? BUILTIN_ASSETS : BUILTIN_ASSETS.filter(a=>a.cat===assetFilter);
+  const filteredAssets = BUILTIN_ASSETS.filter(a => {
+    const matchesFilter = assetFilter === "all" || a.cat === assetFilter;
+    const matchesSearch = assetSearch === "" || 
+      a.name.toLowerCase().includes(assetSearch.toLowerCase()) || 
+      a.desc.toLowerCase().includes(assetSearch.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
   const htmlTemplate = `<!DOCTYPE html><html><head><style>
     *{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden;background:#0c0e1a;display:flex;justify-content:center;align-items:center}
@@ -228,17 +223,18 @@ GF.draw = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* ─ LEFT: FILES ─ */}
         <aside className="w-48 bg-[#0a0b0e] border-r border-white/[0.04] flex flex-col shrink-0">
-          <div className="p-2.5 border-b border-white/[0.04]"><span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">Explorer</span></div>
+          <div className="p-2.5 border-b border-white/[0.04]"><span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">{lang === 'ar' ? 'المستكشف' : 'Explorer'}</span></div>
           <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
-            <div className="text-[9px] font-bold text-slate-600 px-2.5 pt-2 pb-1 uppercase tracking-wider">📁 Source</div>
+            <div className="text-[9px] font-bold text-slate-600 px-2.5 pt-2 pb-1 uppercase tracking-wider">{lang === 'ar' ? 'المصدر' : 'Source'}</div>
             {Object.keys(files).map(name=>(
               <button key={name} onClick={()=>switchFile(name)}
-                className={`w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] transition-all ${activeFile===name?"bg-purple-500/10 text-purple-300 border border-purple-500/15":"text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]"}`}>
+                className={`w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] transition-all ${activeFile===name?"bg-purple-500/10 text-purple-300 border border-purple-500/15":"text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]"}`}
+                dir="ltr">
                 <span className={activeFile===name?"text-purple-400":"text-slate-600"}>{name.endsWith('.js')?'📄':'⚙️'}</span>
                 <span className="font-medium truncate">{name}</span>
               </button>
             ))}
-            <div className="text-[9px] font-bold text-slate-600 px-2.5 pt-4 pb-1 uppercase tracking-wider">📁 Assets</div>
+            <div className="text-[9px] font-bold text-slate-600 px-2.5 pt-4 pb-1 uppercase tracking-wider">{lang === 'ar' ? 'الأصول' : 'Assets'}</div>
             {["sprites/","audio/","effects/"].map(n=>(
               <div key={n} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-slate-600 cursor-default"><span>📂</span><span className="font-medium">{n}</span></div>
             ))}
@@ -246,7 +242,7 @@ GF.draw = () => {
           <div className="p-3 border-t border-white/[0.04] bg-black/20 space-y-2">
             <div className="flex items-center justify-between"><span className="text-[8px] text-slate-600 font-bold uppercase tracking-wider">FPS</span>
               <span className={`text-[10px] font-bold font-mono ${fps>=55?'text-emerald-400':fps>=30?'text-yellow-400':'text-rose-400'}`}>{isRunning?fps:'--'}</span></div>
-            <div className="flex items-center justify-between"><span className="text-[8px] text-slate-600 font-bold uppercase tracking-wider">Engine</span>
+            <div className="flex items-center justify-between"><span className="text-[8px] text-slate-600 font-bold uppercase tracking-wider">{lang === 'ar' ? 'المحرك' : 'Engine'}</span>
               <span className="text-[9px] text-emerald-500 font-bold">GF v1.0</span></div>
           </div>
         </aside>
@@ -325,51 +321,170 @@ GF.draw = () => {
           </div>
         </main>
 
-        {/* ─ RIGHT: ASSETS PANEL ─ */}
-        <aside className={`bg-[#0a0b0e] border-l border-white/[0.04] flex flex-col shrink-0 transition-all duration-300 ${showAssetPanel?'w-72':'w-10'}`}>
-          <button onClick={()=>setShowAssetPanel(!showAssetPanel)}
-            className="h-8 flex items-center justify-center border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors shrink-0"
-            title={showAssetPanel?"Close Assets":"Open Assets"}>
-            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.15em]">
-              {showAssetPanel ? '🎨 Assets ✕' : '🎨'}
-            </span>
-          </button>
+        <aside className={`bg-[#0a0b0e] border-l border-white/[0.04] flex flex-col shrink-0 transition-all duration-300 relative ${showAssetPanel ? 'w-80' : 'w-10'}`}>
+          <div className="h-10 flex items-center border-b border-white/[0.04] bg-[#0c0d12] shrink-0 overflow-hidden">
+            {showAssetPanel ? (
+              <div className="flex flex-1 h-full">
+                <button 
+                  onClick={() => setRightTab("assets")}
+                  className={`flex-1 text-[10px] font-black uppercase tracking-widest transition-all ${rightTab === 'assets' ? 'text-white bg-[#0a0b0e]' : 'text-slate-600 hover:text-slate-400'}`}
+                >
+                  🎨 Library
+                </button>
+                <button 
+                  onClick={() => setRightTab("inspector")}
+                  className={`flex-1 text-[10px] font-black uppercase tracking-widest transition-all ${rightTab === 'inspector' ? 'text-white bg-[#0a0b0e]' : 'text-slate-600 hover:text-slate-400'}`}
+                >
+                  🔍 Inspector
+                </button>
+                <button onClick={() => setShowAssetPanel(false)} className="px-3 text-slate-700 hover:text-rose-500 transition-colors">✕</button>
+              </div>
+            ) : (
+              <button onClick={() => setShowAssetPanel(true)} className="w-full h-full flex items-center justify-center text-slate-600 hover:text-white transition-colors">
+                🎨
+              </button>
+            )}
+          </div>
 
-          {showAssetPanel && (
-            <>
-              {/* Category Filter */}
-              <div className="p-2 border-b border-white/[0.04] flex flex-wrap gap-1">
-                {ASSET_CATEGORIES.map(c=>(
-                  <button key={c.key} onClick={()=>setAssetFilter(c.key)}
-                    className={`px-2 py-1 rounded-md text-[9px] font-bold transition-all ${assetFilter===c.key?'bg-purple-500/15 text-purple-400 border border-purple-500/20':'text-slate-600 hover:text-slate-400 border border-transparent'}`}>
-                    {c.icon} {c.label}
+          {showAssetPanel && rightTab === "assets" && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0b0e]">
+              {/* Search Bar */}
+              <div className="p-3 border-b border-white/[0.04] bg-black/20">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-[10px]">🔍</span>
+                  <input 
+                    type="text" 
+                    placeholder="Search components..." 
+                    value={assetSearch}
+                    onChange={(e) => setAssetSearch(e.target.value)}
+                    className="w-full bg-[#12141c] border border-white/[0.05] rounded-xl pl-8 pr-3 py-2 text-[11px] text-slate-300 focus:outline-none focus:border-purple-500/50 placeholder:text-slate-700 transition-all shadow-inner"
+                  />
+                  {assetSearch && (
+                    <button onClick={() => setAssetSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-700 hover:text-slate-400 text-[10px]">✕</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="p-2 border-b border-white/[0.04] flex flex-wrap gap-1 bg-[#0c0d12]">
+                {ASSET_CATEGORIES.map(c => (
+                  <button 
+                    key={c.key} 
+                    onClick={() => setAssetFilter(c.key)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[9px] font-bold transition-all border flex items-center gap-1.5 ${assetFilter === c.key ? 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-lg shadow-purple-500/5' : 'bg-transparent text-slate-600 border-transparent hover:bg-white/[0.03] hover:text-slate-400'}`}
+                  >
+                    <span className="opacity-70">{c.icon}</span> 
+                    {c.label}
+                    {c.count > 0 && <span className="opacity-30 ml-0.5">{c.count}</span>}
                   </button>
                 ))}
               </div>
 
-              {/* Asset List */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-hide">
-                {filteredAssets.map(asset=>(
-                  <div key={asset.id} className="group bg-black/20 border border-white/[0.03] rounded-xl p-3 hover:border-purple-500/20 hover:bg-purple-500/[0.03] transition-all">
-                    <div className="flex items-center gap-2.5 mb-2">
-                      <span className="text-lg">{asset.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold text-white truncate">{asset.name}</p>
-                        <p className="text-[9px] text-slate-600 uppercase tracking-wider font-bold">{asset.cat}</p>
+              {/* Asset Cards */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[#0a0b0e] scrollbar-hide">
+                {filteredAssets.length > 0 ? (
+                  filteredAssets.map(asset => (
+                    <div 
+                      key={asset.id} 
+                      className={`group rounded-2xl border transition-all duration-300 overflow-hidden ${expandedAsset === asset.id ? 'bg-[#141620] border-purple-500/30 ring-1 ring-purple-500/10 shadow-2xl' : 'bg-black/20 border-white/[0.03] hover:border-white/[0.08] hover:bg-white/[0.02]'}`}
+                    >
+                      {/* Card Header/Collapsed View */}
+                      <div 
+                        className="p-3 cursor-pointer select-none"
+                        onClick={() => setExpandedAsset(expandedAsset === asset.id ? null : asset.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${asset.preview || 'from-slate-700 to-slate-800'} flex items-center justify-center text-xl shadow-inner`}>
+                            {asset.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-[11px] font-black text-slate-200 group-hover:text-white transition-colors truncate">{asset.name}</h4>
+                              <span className="text-[8px] font-black bg-white/[0.05] px-1.5 py-0.5 rounded text-slate-600 uppercase tracking-widest">{asset.cat}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 line-clamp-1 mt-0.5">{asset.desc}</p>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Detail View (Expanded) */}
+                      {expandedAsset === asset.id && (
+                        <div className="px-3 pb-3 space-y-3 border-t border-white/[0.03] pt-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="bg-black/40 rounded-lg p-2 font-mono text-[9px] text-slate-500 line-clamp-4 leading-relaxed border border-white/[0.02]">
+                            {asset.code}
+                          </div>
+                          <div className="flex gap-2">
+                             <button 
+                              onClick={() => insertAsset(asset)}
+                              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 ${insertedAssets.has(asset.id) ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5' : 'bg-purple-600 text-white hover:bg-purple-500 shadow-purple-600/20'}`}
+                            >
+                              {insertedAssets.has(asset.id) ? '✓ Added Again' : asset.cat === 'template' ? '📄 Load Template' : '📥 Add to Code'}
+                            </button>
+                            <button 
+                              onClick={() => setExpandedAsset(null)}
+                              className="px-3 py-2 bg-white/[0.04] text-slate-500 border border-white/[0.05] rounded-xl text-[10px] font-bold hover:bg-white/[0.08]"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button onClick={()=>insertAsset(asset)}
-                      className="w-full py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-purple-500/20 active:scale-95 transition-all">
-                      + Insert into Code
-                    </button>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-700">
+                    <span className="text-3xl mb-3 opacity-20">📂</span>
+                    <p className="text-[11px] font-bold uppercase tracking-widest opacity-40">No Assets Found</p>
                   </div>
-                ))}
+                )}
               </div>
 
-              <div className="p-3 border-t border-white/[0.04] bg-black/20">
-                <p className="text-[9px] text-slate-600 text-center font-bold">{filteredAssets.length} assets available</p>
+              {/* Integration Status */}
+              <div className="p-3 border-t border-white/[0.04] bg-[#0c0d12] flex items-center justify-between">
+                <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">
+                  {filteredAssets.length} Available
+                </span>
+                <span className="text-[9px] text-slate-700 flex items-center gap-1.5">
+                   Connected <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
+                </span>
               </div>
-            </>
+            </div>
+          )}
+
+          {showAssetPanel && rightTab === "inspector" && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0b0e] animate-in fade-in slide-in-from-right-2 duration-300">
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <div className="text-center py-10 px-4 border-2 border-dashed border-white/[0.03] rounded-3xl">
+                   <span className="text-3xl block mb-4 opacity-20">🖱️</span>
+                   <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">Select an object in the viewport to inspect properties</p>
+                </div>
+
+                {/* Example Mockup of Inspector */}
+                <div className="space-y-4 opacity-40 grayscale pointer-events-none">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Transform</label>
+                    <div className="grid grid-cols-2 gap-2">
+                       <div className="bg-black/40 p-2 rounded-xl border border-white/[0.03]"><span className="text-[8px] text-slate-700 mr-2">X</span><span className="text-[10px] text-white font-mono">400.0</span></div>
+                       <div className="bg-black/40 p-2 rounded-xl border border-white/[0.03]"><span className="text-[8px] text-slate-700 mr-2">Y</span><span className="text-[10px] text-white font-mono">300.0</span></div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Rendering</label>
+                    <div className="bg-black/40 p-2 rounded-xl border border-white/[0.03] flex justify-between">
+                       <span className="text-[10px] text-slate-400">Opacity</span>
+                       <span className="text-[10px] text-white font-mono">1.0</span>
+                    </div>
+                    <div className="bg-black/40 p-2 rounded-xl border border-white/[0.03] flex justify-between">
+                       <span className="text-[10px] text-slate-400">Tint</span>
+                       <div className="w-3 h-3 rounded bg-purple-500"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3 border-t border-white/[0.04] bg-[#0c0d12]">
+                 <p className="text-[9px] text-slate-700 text-center font-bold">PRO FEATURE: Visual Scripting coming soon</p>
+              </div>
+            </div>
           )}
         </aside>
       </div>

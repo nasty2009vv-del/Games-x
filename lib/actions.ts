@@ -53,7 +53,45 @@ export async function createGame(data: { title: string, description: string, sta
   }
 }
 
-export async function publishGame(gameId: string) {
-  // Logic to change status to 'published'
-  return { success: true };
+export async function toggleFollow(followerId: string, followingId: string) {
+  try {
+    const existing = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } }
+    });
+
+    if (existing) {
+      await prisma.follow.delete({
+        where: { id: existing.id }
+      });
+      revalidatePath(`/profile/[username]`);
+      return { success: true, following: false };
+    } else {
+      await prisma.follow.create({
+        data: { followerId, followingId }
+      });
+      revalidatePath(`/profile/[username]`);
+      return { success: true, following: true };
+    }
+  } catch (error) {
+    console.error("Failed to toggle follow:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
+export async function updateUserProfile(userId: string, data: { bio?: string, username?: string, avatarColor?: string, coverImage?: string }) {
+  try {
+    await prisma.user.update({
+      where: { username: userId },
+      data: {
+        bio: data.bio,
+        username: data.username,
+      }
+    });
+
+    revalidatePath(`/profile/[username]`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    return { success: false, error: "Database error" };
+  }
 }
