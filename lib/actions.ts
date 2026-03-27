@@ -33,6 +33,26 @@ export async function saveGame(gameId: string, data: { title?: string, code?: st
   }
 }
 
+export async function createGame(data: { title: string, description: string, status: string, userId?: string }) {
+  try {
+    const game = await prisma.game.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        userId: data.userId || "demo-user-id", // Fallback for mockup
+        thumbnail: "bg-purple-600/20", // Default thumb
+      }
+    });
+
+    revalidatePath("/explore");
+    return { success: true, game };
+  } catch (error) {
+    console.error("Failed to create game:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
 export async function publishGame(gameId: string) {
   // Logic to change status to 'published'
   return { success: true };
