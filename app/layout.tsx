@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GameForge - The Ultimate Cloud Game Engine",
-  description: "Create, collaborate, and publish your games entirely in the browser using GameForge.",
+  title: "GameForge — منصة تطوير الألعاب السحابية",
+  description: "أنشئ، طوّر، وانشر ألعابك مباشرةً من المتصفح باستخدام محرك GameForge.",
 };
 
 export default function RootLayout({
@@ -24,35 +24,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
+    <html lang="ar" dir="rtl" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-purple-500/30">
-        <nav className="w-full flex items-center justify-between px-6 py-4 bg-slate-900/50 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20">
+        <nav className="w-full flex items-center justify-between px-6 py-4 bg-slate-900/50 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center font-black text-white shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-shadow text-sm">
               GF
             </div>
-            <span className="text-xl tracking-tight font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 hover:text-white transition-colors">
+            <span className="text-xl tracking-tight font-black bg-clip-text text-transparent bg-gradient-to-l from-white to-slate-400 group-hover:from-purple-400 group-hover:to-white transition-all">
               GameForge
             </span>
           </Link>
-          <div className="flex gap-4 items-center gap-8">
-            <Link href="/explore" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Explore</Link>
-            <Link href="/jams" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Game Jams</Link>
-            <Link href="/assets" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Asset Store</Link>
-            <Link href="/profile/demo-user" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Profile</Link>
-            <div className="h-4 w-px bg-slate-800"></div>
-            <Link href="/auth/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
-            <Link href="/editor" className="px-4 py-2 rounded-full border border-purple-500/50 text-purple-400 text-sm font-medium hover:bg-purple-500/10 transition-all font-mono">
-              [Open Editor]
+          <div className="flex items-center gap-6">
+            <Link href="/explore" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">استكشاف</Link>
+            <Link href="/jams" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">المسابقات</Link>
+            <Link href="/assets" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">متجر الأصول</Link>
+            <Link href="/profile/demo-user" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">ملفي</Link>
+            <div className="h-5 w-px bg-slate-800"></div>
+            <Link href="/auth/login" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">تسجيل الدخول</Link>
+            <Link href="/editor" className="px-5 py-2 rounded-xl border border-purple-500/40 text-purple-400 text-sm font-bold hover:bg-purple-500/10 transition-all">
+              فتح المحرر
             </Link>
-            <Link href="/create" className="px-4 py-2 rounded-full bg-white text-slate-950 text-sm font-medium hover:bg-slate-200 transition-all shadow-lg hover:shadow-white/20 active:scale-95">
-              Start Creating
+            <Link href="/create" className="px-5 py-2 rounded-xl bg-white text-slate-950 text-sm font-black hover:bg-slate-200 transition-all shadow-lg hover:shadow-white/20 active:scale-95">
+              ابدأ الإبداع
             </Link>
           </div>
         </nav>
         <main className="flex-1 flex flex-col">{children}</main>
-        <footer className="w-full py-8 mt-auto border-t border-white/5 bg-slate-950 px-6 text-center text-slate-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} GameForge. The ultimate platform for game devs.</p>
+        <footer className="w-full py-10 mt-auto border-t border-white/5 bg-slate-950 px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="text-slate-500 text-sm font-bold">&copy; {new Date().getFullYear()} GameForge. منصة صناعة الألعاب للمطورين العرب.</p>
+            <div className="flex items-center gap-6 text-xs text-slate-600">
+              <Link href="#" className="hover:text-slate-400 transition-colors">الشروط والأحكام</Link>
+              <Link href="#" className="hover:text-slate-400 transition-colors">سياسة الخصوصية</Link>
+              <Link href="#" className="hover:text-slate-400 transition-colors">تواصل معنا</Link>
+            </div>
+          </div>
         </footer>
       </body>
     </html>
