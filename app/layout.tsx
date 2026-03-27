@@ -41,6 +41,9 @@ export default function RootLayout({
             <span className="text-sm font-medium text-slate-600 cursor-not-allowed">Asset Store (Soon)</span>
             <div className="h-4 w-px bg-slate-800"></div>
             <Link href="/api/auth/signin" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+            <Link href="/editor" className="px-4 py-2 rounded-full border border-purple-500/50 text-purple-400 text-sm font-medium hover:bg-purple-500/10 transition-all font-mono">
+              [Open Editor]
+            </Link>
             <Link href="/create" className="px-4 py-2 rounded-full bg-white text-slate-950 text-sm font-medium hover:bg-slate-200 transition-all shadow-lg hover:shadow-white/20 active:scale-95">
               Start Creating
             </Link>
